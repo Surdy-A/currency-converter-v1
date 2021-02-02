@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { ImageBackground, StyleSheet, View, Image } from "react-native";
-
 import {
   Header,
   Title,
@@ -10,12 +9,12 @@ import {
   Icon,
   Left,
   Right,
-  Body,
   Text,
   Picker,
   Form,
 } from "native-base";
 import * as Font from "expo-font";
+import Api from './components/Api';
 
 const image = { uri: "https://reactjs.org/logo-og.png" };
 
@@ -26,9 +25,16 @@ const currencyLogo = require("./assets/currencyLogo.png");
 export default class HeaderNoShadow extends Component {
   constructor(props) {
     super(props);
+
+    // Binding functions
+    this.handleCurrencyInput = this.handleCurrencyInput.bind(this);
+    this.onValueChange = this.onValueChange.bind(this);
+
     this.state = {
       selected: undefined,
       fontsLoaded: false,
+      currencyInput: "",
+      inputPicker: ""
     };
   }
 
@@ -38,16 +44,26 @@ export default class HeaderNoShadow extends Component {
     });
   }
 
+  handleCurrencyInput(fromInput) {
+    fromInput = parseFloat(fromInput.replace(/[-, ]/g, ""));
+    this.setState({
+      currencyInput: fromInput,
+    });
+  }
+
+  // handleInputPicker(fromPicker) {
+    
+  //   this.setState({
+  //     inputPicker: fromPicker,
+  //   });
+  // }
+
   async loadFonts() {
     await Font.loadAsync({
-      // Load a font `Montserrat` from a static resource
-      Montserrat: require("./assets/fonts/Montserrat/Montserrat-Bold.ttf"),
+      // Load a font `Roboto_medium` from a static resource
+      'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
 
       // Any string can be used as the fontFamily name. Here we use an object to provide more control
-      "Montserrat-SemiBold": {
-        uri: require("./assets/fonts/Montserrat/Montserrat-SemiBold.ttf"),
-        fontDisplay: Font.FontDisplay.FALLBACK,
-      },
     });
     this.setState({ fontsLoaded: true });
   }
@@ -89,7 +105,7 @@ export default class HeaderNoShadow extends Component {
                     placeholderIconColor="#007aff"
                     style={{ width: undefined }}
                     selectedValue={this.state.selected}
-                    onValueChange={this.onValueChange.bind(this)}
+                    onValueChange={this.onValueChange}
                     style={styles.ratePicker}
                   >
                     <Picker.Item label="USD" value="key0" />
@@ -103,10 +119,13 @@ export default class HeaderNoShadow extends Component {
                     style={styles.currencyInput}
                     keyboardType="numeric"
                     keyboardAppearance="light"
+                    onChangeText= {this.handleCurrencyInput}
+                    value={this.state.currencyInput}
                   />
                 </View>
               </Form>
-              <Text style={styles.currencyText}>1 USD = 1 NR</Text>
+              <Text style={styles.currencyText}>{this.state.selected} 1 USD = 1 NR {this.state.currencyInput}</Text>
+              <Api />
             </Content>
           </ImageBackground>
         </View>
@@ -195,6 +214,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: "white",
     fontWeight: "bold",
-    fontFamily: "Montserrat",
+    fontFamily: "Roboto_medium",
   },
 });
