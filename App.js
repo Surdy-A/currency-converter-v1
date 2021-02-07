@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { ImageBackground, StyleSheet, View, Image } from "react-native";
+import React, { Component, useEffect, useState } from "react";
+import { ImageBackground, StyleSheet, View, Image, TextInput } from "react-native";
 import {
   Header,
   Title,
@@ -13,128 +13,230 @@ import {
   Picker,
   Form,
 } from "native-base";
-import * as Font from "expo-font";
-import Api from './components/Api';
+import Api from "./components/Api";
+import { useFonts } from "expo-font";
 
 const image = { uri: "https://reactjs.org/logo-og.png" };
 
 const bg = require("./assets/bg.png");
 const currencyLogo = require("./assets/currencyLogo.png");
+const endpoint = "latest";
+const api_key = "e00648f89527be1d3a00e3792ce96add";
+
+const base_url = "https://api.currencyscoop.com/v1/";
+
+function App() {
+  let baseRate = 3.6752;
+  const [rates, setRates] = useState(null);
+  const [currency, setCurrency] = useState(null);
+  const [selected, setSelected] = useState('AED');
+  const [currencyOutput, setCurrencyOutput] = useState('AFN');
+
+  const [currencyInput, setCurrencyInput] = useState(baseRate);
+  const [amountOutput, setAmountOutput] = useState(1);
+  const [answer, setAnswer] = useState();
+
+  let fromValue = 3.122;
+  let toValue = 3.122;
+  let otherValue = 3.122;
 
 
-export default class HeaderNoShadow extends Component {
-  constructor(props) {
-    super(props);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
 
-    // Binding functions
-    this.handleCurrencyInput = this.handleCurrencyInput.bind(this);
-    this.onValueChange = this.onValueChange.bind(this);
+  const [loaded] = useFonts({
+    Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
+  });
 
-    this.state = {
-      selected: undefined,
-      fontsLoaded: false,
-      currencyInput: "",
-      inputPicker: ""
-    };
-  }
+  const onValueChange = (value) => {
+    setSelected(value);
+  };
 
-  onValueChange(value) {
-    this.setState({
-      selected: value,
-    });
-  }
+  const onCurrencyOutputChange = (value) => {
+    setCurrencyOutput(value);
+    console.log(selected)
+  };
 
-  handleCurrencyInput(fromInput) {
-    fromInput = parseFloat(fromInput.replace(/[-, ]/g, ""));
-    this.setState({
-      currencyInput: fromInput,
-    });
-  }
+  const handleCurrencyInput = (amountOutput) => {
+    amountOutput = parseFloat(amountOutput.replace(/[-, ]/g, ""));
+    if(Number.isNaN(amountOutput)) 
+    return  amountOutput = 1;
 
-  // handleInputPicker(fromPicker) {
+    setCurrencyInput(calculate( amountOutput));
+  };
+
+  const handleAmountOutput = (amountOutput) => {
+    amountOutput = parseFloat(amountOutput.replace(/[-, ]/g, ""));
+    if(Number.isNaN(amountOutput)) 
+    return  amountOutput = 1;
     
-  //   this.setState({
-  //     inputPicker: fromPicker,
-  //   });
-  // }
+    setAmountOutput(calculate(amountOutput));
+  };
 
-  async loadFonts() {
-    await Font.loadAsync({
-      // Load a font `Roboto_medium` from a static resource
-      'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
 
-      // Any string can be used as the fontFamily name. Here we use an object to provide more control
-    });
-    this.setState({ fontsLoaded: true });
-  }
+   const calculate = (amountOutput)=>{
+     let answer;
+     {rates
+      ? Object.entries(rates).forEach(([key, value]) => {
+    currencyOutput == key ? (toValue = value) : (otherValue = value);
+    selected  == key? (fromValue = value) : (otherValue = value);
+      }
+        )
+      : null}
 
-  componentDidMount() {
-    this.loadFonts();
-  }
-
-  render() {
-    if (this.state.fontsLoaded) {
-      return (
-        <View style={styles.container}>
-          <ImageBackground
-            source={require("./assets/bg.png")}
-            style={styles.image}
-          >
-            <Header noShadow>
-              <Left>
-                <Title>C_Exchange</Title>
-              </Left>
-
-              <Right>
-                <Button transparent>
-                  <Icon name="settings" />
-                </Button>
-              </Right>
-            </Header>
-
-            <Content style={styles.container}>
-              <Image source={currencyLogo} style={styles.currencyLogo} />
-
-              <Form style={styles.container}>
-                <View style={styles.field}>
-                  <Picker
-                    mode="dropdown"
-                    iosIcon={<Icon name="arrow-down" />}
-                    placeholder="Select your SIM"
-                    placeholderStyle={{ color: "#bfc6ea" }}
-                    placeholderIconColor="#007aff"
-                    style={{ width: undefined }}
-                    selectedValue={this.state.selected}
-                    onValueChange={this.onValueChange}
-                    style={styles.ratePicker}
-                  >
-                    <Picker.Item label="USD" value="key0" />
-                    <Picker.Item label="ATM" value="key1" />
-                    <Picker.Item label="Deb" value="key2" />
-                    <Picker.Item label="Cre" value="key3" />
-                    <Picker.Item label="Net" value="key4" />
-                  </Picker>
-                  <Input
-                    placeholder="Enter Value"
-                    style={styles.currencyInput}
-                    keyboardType="numeric"
-                    keyboardAppearance="light"
-                    onChangeText= {this.handleCurrencyInput}
-                    value={this.state.currencyInput}
-                  />
-                </View>
-              </Form>
-              <Text style={styles.currencyText}>{this.state.selected} 1 USD = 1 NR {this.state.currencyInput}</Text>
-              <Api />
-            </Content>
-          </ImageBackground>
-        </View>
-      );
-    } else {
-      return null;
+     console.log(fromValue + " " + toValue)
+    if(fromValue < toValue) {
+     answer = (toValue / fromValue);
     }
+    else {
+    answer = (toValue / fromValue) ;
+    }
+      return answer;
+   };
+
+  useEffect(() => {
+    fetchAPI = async () => {
+      try {
+        const rates = await fetch(base_url + endpoint + "?api_key=" + api_key);
+
+        const currency = await fetch(
+          base_url + "currencies" + endpoint + "?api_key=" + api_key
+        );
+
+        const dataJSON = await rates.json();
+        const currencyJSON = await currency.json();
+
+        if (dataJSON && currencyJSON) {
+          setRates(dataJSON.response.rates);
+          setCurrency(Object.values(currencyJSON.response.fiats));
+          //console.log(dataJSON.response.rates);
+          //console.log(currencyJSON.response.fiats);
+          setError(false);
+        }
+      } catch (error) {
+        setLoading(false);
+        setError(error.message);
+      }
+    };
+    fetchAPI();
+  }, [currencyInput, amountOutput, selected, currencyOutput]);
+
+  if (!loaded) {
+    return null;
   }
+
+  return (
+    <View style={styles.container}>
+      <ImageBackground source={require("./assets/bg.png")} style={styles.image}>
+        <Header noShadow>
+          <Left>
+            <Title>C_Exchange</Title>
+          </Left>
+
+          <Right>
+            <Button transparent>
+              <Icon name="settings" />
+            </Button>
+          </Right>
+        </Header>
+
+        <Content style={styles.container}>
+          <Image source={currencyLogo} style={styles.currencyLogo} />
+
+          <Form style={styles.container}>
+            <View style={styles.field}>
+              <Picker
+                mode="dialog"
+                iosIcon={<Icon name="arrow-down" />}
+                placeholder="Select Currency"
+                placeholderStyle={{ color: "#bfc6ea" }}
+                placeholderIconColor="#007aff"
+                style={{ width: undefined }}
+                selectedValue={selected}
+                onValueChange={onValueChange}
+                style={styles.ratePicker}
+              >
+                {currency
+                  ? currency.map((country, id) => (
+                      <Picker.Item
+                        label={country.currency_name}
+                        value={country.currency_code}
+                        key={id}
+                      />
+                    ))
+                  : null}
+              </Picker>
+              <Input
+                placeholder={"Enter Value e.g " + baseRate}
+                style={styles.currencyInput}
+                keyboardType="numeric"
+                keyboardAppearance="light"
+                onChangeText={handleCurrencyInput}
+                value={answer}
+                defaultValue={currencyInput}
+              />
+            </View>
+            {/* To Field */}
+
+            <View style={styles.field}>
+              <Picker
+                mode="dialog"
+                iosIcon={<Icon name="arrow-down" />}
+                placeholder="Select Currency"
+                placeholderStyle={{ color: "#bfc6ea" }}
+                placeholderIconColor="#007aff"
+                style={{ width: undefined }}
+                selectedValue={currencyOutput}
+                onValueChange={onCurrencyOutputChange}
+                style={styles.ratePicker}
+              >
+                {currency
+                  ? currency.map((country, id) => (
+                      <Picker.Item
+                        label={country.currency_name}
+                        value={country.currency_code}
+                        key={id}
+                      />
+                    ))
+                  : null}
+              </Picker>
+              <Input
+                 placeholder={"Enter Value e.g " + baseRate}
+                 style={styles.currencyInput}
+                 keyboardType="numeric"
+                 keyboardAppearance="light"
+                 onChangeText={handleAmountOutput}
+                 value={answer}
+              />
+            </View>
+          </Form>
+          <Text style={styles.currencyText}>
+              { selected == currencyOutput? ("1 " + selected + " = " + "1 " + currencyOutput) : ""} {amountOutput}
+           </Text>
+          {rates
+            ? Object.entries(rates).map(([key, value]) => (
+                <Text>
+                  {currencyOutput == key ? (toValue = value) : (otherValue = value)}
+                </Text>
+                
+              ))
+            : null}
+             {/* {console.log("From value "+fromValue)}
+          {console.log("currency Input "+ currencyInput)}
+          {console.log()}
+          {console.log("To value "+toValue)}
+          {console.log("currency Outpuut "+ currencyOutput)} */}
+          {console.log(currencyOutput)}
+          <Text>
+            Answer
+          </Text>
+        </Content>
+      </ImageBackground>
+    </View>
+  );
 }
+
+export default App;
 
 const styles = StyleSheet.create({
   container: {
