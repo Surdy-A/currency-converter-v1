@@ -1,5 +1,11 @@
 import React, { Component, useEffect, useState } from "react";
-import { ImageBackground, StyleSheet, View, Image, TextInput } from "react-native";
+import {
+  ImageBackground,
+  StyleSheet,
+  View,
+  Image,
+  TextInput,
+} from "react-native";
 import {
   Header,
   Title,
@@ -29,8 +35,8 @@ function App() {
   let baseRate = 3.6752;
   const [rates, setRates] = useState(null);
   const [currency, setCurrency] = useState(null);
-  const [selected, setSelected] = useState('AED');
-  const [currencyOutput, setCurrencyOutput] = useState('AFN');
+  const [selected, setSelected] = useState("AED");
+  const [currencyOutput, setCurrencyOutput] = useState("AFN");
 
   const [currencyInput, setCurrencyInput] = useState(baseRate);
   const [amountOutput, setAmountOutput] = useState(1);
@@ -39,7 +45,6 @@ function App() {
   let fromValue = 3.122;
   let toValue = 3.122;
   let otherValue = 3.122;
-
 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
@@ -50,49 +55,48 @@ function App() {
 
   const onValueChange = (value) => {
     setSelected(value);
+    console.log("selected " + selected);
   };
 
   const onCurrencyOutputChange = (value) => {
     setCurrencyOutput(value);
-    console.log(selected)
+    console.log("selected " + currencyOutput);
   };
 
-  const handleCurrencyInput = (amountOutput) => {
-    amountOutput = parseFloat(amountOutput.replace(/[-, ]/g, ""));
-    if(Number.isNaN(amountOutput)) 
-    return  amountOutput = 1;
-
-    setCurrencyInput(calculate( amountOutput));
+  const handleCurrencyInput = (currencyInput) => {
+    currencyInput = parseFloat(currencyInput.replace(/[-, ]/g, ""));
+    if (Number.isNaN(currencyInput)) return (currencyInput = 1);
+    setAmountOutput(calculate(amountOutput));
+    setCurrencyInput(calculate(currencyInput));
   };
 
   const handleAmountOutput = (amountOutput) => {
     amountOutput = parseFloat(amountOutput.replace(/[-, ]/g, ""));
-    if(Number.isNaN(amountOutput)) 
-    return  amountOutput = 1;
-    
+    if (Number.isNaN(amountOutput)) return (amountOutput = 1);
+    setCurrencyInput(calculate(currencyInput));
+
     setAmountOutput(calculate(amountOutput));
   };
 
-
-   const calculate = (amountOutput)=>{
-     let answer;
-     {rates
-      ? Object.entries(rates).forEach(([key, value]) => {
-    currencyOutput == key ? (toValue = value) : (otherValue = value);
-    selected  == key? (fromValue = value) : (otherValue = value);
-      }
-        )
-      : null}
-
-     console.log(fromValue + " " + toValue)
-    if(fromValue < toValue) {
-     answer = (toValue / fromValue);
+  const calculate = (amountOutput) => {
+    let answer;
+    {
+      rates
+        ? Object.entries(rates).forEach(([key, value]) => {
+            currencyOutput == key ? (toValue = value) : (otherValue = value);
+            selected == key ? (fromValue = value) : (otherValue = value);
+          })
+        : null;
     }
-    else {
-    answer = (toValue / fromValue) ;
+
+    console.log("from value = to value " + fromValue + " " + toValue);
+    if (fromValue < toValue) {
+      answer = toValue / fromValue;
+    } else {
+      answer = toValue / fromValue;
     }
-      return answer;
-   };
+    return answer;
+  };
 
   useEffect(() => {
     fetchAPI = async () => {
@@ -173,7 +177,7 @@ function App() {
                 keyboardAppearance="light"
                 onChangeText={handleCurrencyInput}
                 value={answer}
-                defaultValue={currencyInput}
+                
               />
             </View>
             {/* To Field */}
@@ -201,35 +205,39 @@ function App() {
                   : null}
               </Picker>
               <Input
-                 placeholder={"Enter Value e.g " + baseRate}
-                 style={styles.currencyInput}
-                 keyboardType="numeric"
-                 keyboardAppearance="light"
-                 onChangeText={handleAmountOutput}
-                 value={answer}
+                style={styles.currencyInput}
+                keyboardType="numeric"
+                keyboardAppearance="light"
+                onChangeText={handleAmountOutput}
+                    defaultValue={baseRate}
+           value={amountOutput.toString()}
+           underlineColorAndroid='transparent'  
+
               />
             </View>
           </Form>
           <Text style={styles.currencyText}>
-              { selected == currencyOutput? ("1 " + selected + " = " + "1 " + currencyOutput) : ""} {amountOutput}
-           </Text>
+            {selected == currencyOutput
+              ? "1 " + selected + " = " + "1 " + currencyOutput
+              : ""}{" "}
+            {amountOutput} {currencyInput}
+          </Text>
           {rates
             ? Object.entries(rates).map(([key, value]) => (
                 <Text>
-                  {currencyOutput == key ? (toValue = value) : (otherValue = value)}
+                  {currencyOutput == key
+                    ? (toValue = value)
+                    : (otherValue = value)}
                 </Text>
-                
               ))
             : null}
-             {/* {console.log("From value "+fromValue)}
+          {/* {console.log("From value "+fromValue)}
           {console.log("currency Input "+ currencyInput)}
           {console.log()}
           {console.log("To value "+toValue)}
           {console.log("currency Outpuut "+ currencyOutput)} */}
-          {console.log(currencyOutput)}
-          <Text>
-            Answer
-          </Text>
+          {console.log("currency output " + currencyOutput)}
+          <Text>Answer</Text>
         </Content>
       </ImageBackground>
     </View>
